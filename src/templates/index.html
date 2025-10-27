@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="5">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSS Miner Dashboard v7</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header><h1>DSS Mining Pool Server</h1></header>
+        <main>
+            <!-- Stratum Client Status Card -->
+            <div id="stratum-status" class="card status-top">
+                <h2>Stratum Client Status</h2>
+                <div class="status-grid">
+                    <p><span>Connection:</span> 
+                        <span class="align-right {{ 'green' if stats.stratum.connected else 'red' }}">
+                            {{ 'Connected' if stats.stratum.connected else 'Disconnected' }}
+                        </span>
+                    </p>
+                    <p><span>Pool:</span> <span class="align-right">{{ stats.stratum.pool }}</span></p>
+                    <p><span>Host:</span> <span class="align-right">{{ stats.stratum.host }}:{{ stats.stratum.port }}</span></p>
+                    <p><span>Last Job ID:</span> <span class="align-right">{{ stats.stratum.last_job or 'None' }}</span></p>
+                </div>
+                <div id="server-console" class="console-card">
+                    <div class="console-log" id="console-log">
+                        {% for item in activity %}
+                            <div class="console-line"><span class="time">{{ item.time }}</span> <span class="msg">- {{ item.node }}</span></div>
+                        {% else %}
+                            <div class="console-line"><span class="msg">No activity yet.</span></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="console-toggle-container">
+                    <button id="clear-log-btn" class="console-toggle-btn">Clear</button>
+                    <button id="toggle-console-btn" class="console-toggle-btn">-</button>
+                </div>
+            </div>
+
+            <div class="column-container">
+                <!-- Left Column -->
+                <div class="column">
+                    <div class="card">
+                        <h2>Server Info</h2>
+                        <p><span>Status:</span> <span class="align-right {{ 'green' if stats.running else '' }}">{{ "Running" if stats.running else "Stopped" }}</span></p>
+                        <p><span>Connected Clients:</span> <span class="align-right">{{ stats.client_count }}</span></p>
+                        <p><span>Jobs Distributed:</span> <span class="align-right">{{ stats.jobs }}</span></p>
+                        <p><span>Shares Submitted:</span> <span class="align-right">{{ stats.shares }}</span></p>
+                        {% if stats.running %}
+                            <button id="stop-server-btn" class="danger">Stop Server</button>
+                        {% else %}
+                            <button id="start-server-btn">Start Server</button>
+                        {% endif %}
+                    </div>
+                    <div class="card">
+                        <h2>Job Status</h2>
+                        <p><span>Jobs Distributed:</span> <span class="align-right">{{ stats.jobs_distributed }}</span></p>
+                        <p><span>Jobs in Queue:</span> <span class="align-right">{{ stats.jobs_in_queue }}</span></p>
+                        <p><span>Shares Submitted:</span> <span class="align-right">{{ stats.shares_submitted }}</span></p>
+                    </div>
+                </div>
+                <!-- Center Column -->
+                <div class="column-center">
+            <div class="card">
+                            <h2>Pool Connection</h2>
+                            <p><span>Status:</span> <span class="align-right {{ 'green' if stats.p2p_connected }}">
+                                {{ "Connected" if stats.p2p_connected else "Disconnected" }}
+                            </span></p>
+                            <p><span>Current Pool:</span><span class="align-right">{{ p2p_host }}</span></p>
+                            <div class="wallet-section">
+                                <div style="width:100%">
+                                    <label for="wallet-input">Login Wallet (XMR address)</label>
+                                    <input type="text" id="wallet-input" value="{{ wallet }}" placeholder="Enter XMR wallet address to receive payouts" readonly>
+                                </div>
+                                <div>
+                                    <button id="save-wallet-btn" class="icon-btn" data-state="edit">✏️</button>
+                                </div>
+                            </div>
+                            <div class="pool-selector">
+                                <div class="pool-grid">
+                                    {% for pool_name, pool_info in available_pools.items() %}
+                                        <button class="pool-btn {% if stats.current_pool == pool_name %}active{% endif %}" data-pool="{{ pool_name }}">
+                                            <span>{{ pool_name.replace('_', ' ')|title }}</span>
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2>Connected Clients</h2>
+                            <div class="client-list">
+                                {% for c in clients %}
+                                    <div class="client-card {{ 'active' if c.active }}">
+                                        <div class="client-info">{{ c.node }} <br><small>{{ c.id[:8] }}</small></div>
+                                        <div class="client-hashrate">{{ '%.2f'|format(c.hashrate) }} H/s</div>
+                                    </div>
+                                {% else %}
+                                    <p class="no-clients">No clients connected.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right Column -->
+                    <div class="column">
+                        <div class="card"><h2>Recent Activity</h2><div class="activity-list">
+                            {% for item in activity %}
+                                <div class="activity-item {{ 'event' if item.is_event }}"><span>{{ item.time }} - {{ item.node }}</span></div>
+                            {% else %}<p>No recent activity.</p>{% endfor %}
+                        </div></div>
+                    </div>
+                </div>
+            
+
+            </main>
+        </div>
+        <footer class="fixed-footer"><p>© 2025 FG Business Services Ltd. All Rights Reserved.</p></footer>
+        <script>
+            const startBtn = document.getElementById('start-server-btn');
+            if(startBtn) startBtn.addEventListener('click', () => 
+                fetch('/start_server', {method: 'POST'}).then(() => location.reload())
+            );
+        
+            const stopBtn = document.getElementById('stop-server-btn');
+            if(stopBtn) stopBtn.addEventListener('click', () => 
+                fetch('/stop_server', {method: 'POST'}).then(() => location.reload())
+            );
+        
+            document.querySelectorAll('.pool-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const selectedPool = button.dataset.pool;
+                    fetch('/switch_pool', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({pool: selectedPool})
+                    }).then(() => location.reload());
+                });
+            });
+
+            const saveWalletBtn = document.getElementById('save-wallet-btn');
+            const walletInput = document.getElementById('wallet-input');
+
+            if(saveWalletBtn && walletInput) saveWalletBtn.addEventListener('click', () => {
+                if (saveWalletBtn.dataset.state === 'edit') {
+                    // Switch to save mode
+                    walletInput.removeAttribute('readonly');
+                    walletInput.focus();
+                    saveWalletBtn.dataset.state = 'save';
+                    saveWalletBtn.innerHTML = '✔️';
+                } else {
+                    // Switch to edit mode and save data
+                    const addr = walletInput.value.trim();
+                    if(!addr) return alert('Please enter a wallet address');
+                    
+                    fetch('/save_wallet', {
+                        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({wallet: addr})
+                    }).then(r=>r.json()).then(j=>{
+                        if(j.status==='ok') {
+                            walletInput.setAttribute('readonly', true);
+                            saveWalletBtn.dataset.state = 'edit';
+                            saveWalletBtn.innerHTML = '✏️';
+                            location.reload(); // Or just update UI without reload
+                        } else {
+                            alert('Error saving wallet: '+(j.message||'unknown'));
+                        }
+                    }).catch(e=>alert('Error: '+e));
+                }
+            });
+
+            // Console minimize/maximize functionality
+            const toggleConsoleBtn = document.getElementById('toggle-console-btn');
+            const serverConsole = document.getElementById('server-console');
+            const clearLogBtn = document.getElementById('clear-log-btn');
+            const consoleLog = document.getElementById('console-log');
+
+            if (toggleConsoleBtn && serverConsole) {
+                toggleConsoleBtn.addEventListener('click', () => {
+                    serverConsole.classList.toggle('minimized');
+                    if (serverConsole.classList.contains('minimized')) {
+                        toggleConsoleBtn.textContent = '+';
+                    } else {
+                        toggleConsoleBtn.textContent = '-';
+                    }
+                });
+            }
+
+            if (clearLogBtn && consoleLog) {
+                clearLogBtn.addEventListener('click', () => {
+                    consoleLog.innerHTML = '<div class="console-line"><span class="msg">Log cleared.</span></div>';
+                });
+            }
+    </script>
+</body>
+</html>

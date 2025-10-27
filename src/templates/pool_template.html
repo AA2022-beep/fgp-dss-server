@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header><h1>{{ title }}</h1></header>
+        <main>
+            <div class="column-container">
+                <!-- Left Column -->
+                <div class="column">
+                    {% block pool_stats %}{% endblock %}
+                </div>
+                <!-- Center Column -->
+                <div class="column-center">
+                    <div class="card">
+                        <h2>Miners Online</h2>
+                        <div class="client-list">
+                            {% for miner in miners_online %}
+                                <div class="client-card {{ 'active' if miner.status == 'Active' }}">
+                                    <div class="client-info">{{ miner.name }}</div>
+                                    <div class="client-hashrate">Luck: {{ miner.luck }}</div>
+                                    <div class="client-hashrate">Min Payout: {{ miner.min_payout }}</div>
+                                    <div class="client-hashrate">Status: {{ miner.status }}</div>
+                                </div>
+                            {% else %}
+                                <p class="no-clients">No miners online.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Recent Blocks (Max 30)</h2>
+                        <div class="activity-list" style="max-height: 300px; overflow-y: auto;">
+                            {% for block in recent_blocks %}
+                                <div class="activity-item">
+                                    <span>Height: {{ block.height }}</span>
+                                    <span>Hash: {{ block.hash }}</span>
+                                    <span>Time: {{ block.timestamp }}</span>
+                                    <span>Reward: {{ block.reward }}</span>
+                                </div>
+                            {% else %}
+                                <p>No recent blocks.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column -->
+                <div class="column">
+                    <div class="card">
+                        <h2>Connection Details</h2>
+                        <p><span>Stratum Host:</span> <span class="align-right">{{ connection_details.stratum_host }}</span></p>
+                        <p><span>Stratum Port:</span> <span class="align-right">{{ connection_details.stratum_port }}</span></p>
+                        <p><span>Username:</span> <span class="align-right">{{ connection_details.username }}</span></p>
+                        <p><span>Password:</span> <span class="align-right">{{ connection_details.password }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Buy Hashpower</h2>
+                        <div class="client-list">
+                            {% for provider in hash_power %}
+                                <div class="client-card">
+                                    <div class="client-info">{{ provider.provider }}</div>
+                                    <div class="client-hashrate">{{ provider.price }}</div>
+                                </div>
+                            {% else %}
+                                <p>No hash power available.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>How-to</h2>
+                        <div class="activity-list">
+                            {% for link in how_to_links %}
+                                <div class="activity-item"><a href="{{ link.url }}">{{ link.title }}</a></div>
+                            {% else %}
+                                <p>No links available.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="fixed-footer"><p>© 2025 FG Business Services Ltd. All Rights Reserved.</p></footer>
+    </div>
+</body>
+</html>

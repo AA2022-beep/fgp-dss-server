@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FGP Pool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Main Title Block -->
+        <div class="title-block card">
+            <div class="logo">
+                <h1>FGP Pool</h1>
+            </div>
+            <div class="title-stats">
+                <div class="stat-item">
+                    <span class="label">Total Paid</span>
+                    <span class="value">{{ title_stats.total_paid }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Miners Online</span>
+                    <span class="value">{{ title_stats.miners_online }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Pool Hashrate</span>
+                    <span class="value">{{ title_stats.pool_hashrate }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Blocks Found</span>
+                    <span class="value">{{ title_stats.blocks_found }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabbed Navigation -->
+        <div class="tabs">
+            <button class="tab-link active" onclick="openTab(event, 'Home')">Home</button>
+            <button class="tab-link" onclick="openTab(event, 'Dashboard')">Dashboard</button>
+            <button class="tab-link" onclick="openTab(event, 'Miners')">Miners</button>
+            <button class="tab-link" onclick="openTab(event, 'Blocks')">Blocks</button>
+            <button class="tab-link" onclick="openTab(event, 'Connect')">Connect</button>
+            <button class="tab-link" onclick="openTab(event, 'Support')">Support</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="Home" class="tab-content" style="display: block;">
+            <div class="column-container">
+                <div class="column">
+                    <div class="card">
+                        <h2>Welcome</h2>
+                        <p>{{ home_content.welcome_message }}</p>
+                    </div>
+                </div>
+                <div class="column-center">
+                    <div class="card">
+                        <h2>Key Features</h2>
+                        <ul>
+                            {% for feature in home_content.pool_features %}
+                                <li>{{ feature }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="card">
+                        <h2>Latest News</h2>
+                        {% for item in home_content.news %}
+                            <div class="news-item">
+                                <strong>{{ item.date }}:</strong> {{ item.title }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="Dashboard" class="tab-content">
+            <div class="card">
+                <h2>Dashboard</h2>
+                <p>Dashboard content goes here. Charts and detailed stats will be displayed on this page.</p>
+            </div>
+        </div>
+
+        <div id="Miners" class="tab-content">
+            <div class="card">
+                <h2>Miners</h2>
+                <p>A list of all connected miners and their individual statistics will be shown here.</p>
+            </div>
+        </div>
+
+        <div id="Blocks" class="tab-content">
+            <div class="card">
+                <h2>Blocks Found</h2>
+                <p>This page will display a history of all blocks found by the pool.</p>
+            </div>
+        </div>
+
+        <div id="Connect" class="tab-content">
+            <div class="card">
+                <h2>Connection Details</h2>
+                <p>Stratum Host: stratum.fgp-pool.com</p>
+                <p>Port: 3333</p>
+                <p>Username: YOUR_WALLET_ADDRESS</p>
+                <p>Password: x</p>
+            </div>
+        </div>
+
+        <div id="Support" class="tab-content">
+            <div class="card">
+                <h2>Support</h2>
+                <p>If you need help, please join our Discord channel or send an email to support@fgp-pool.com.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            // Get all elements with class="tab-content" and hide them
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // Get all elements with class="tab-link" and remove the class "active"
+            tablinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // Show the current tab, and add an "active" class to the button that opened the tab
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
+</body>
+</html>

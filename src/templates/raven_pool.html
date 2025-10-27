@@ -1,0 +1,44 @@
+{% extends "pool_template.html" %}
+
+{% block pool_stats %}
+<div class="card">
+    <h2>RVN Price</h2>
+    <p class="large-text">{{ pool_stats.rvn_price }}</p>
+</div>
+<div class="card">
+    <h2>Pool Hashrate</h2>
+    <p class="large-text">{{ pool_stats.pool_hashrate }}</p>
+</div>
+<div class="card">
+    <h2>Current Block Info</h2>
+    <p class="large-text">{{ pool_stats.current_block_info }}</p>
+</div>
+<div class="card">
+    <h2>Block Reward</h2>
+    <p class="large-text">{{ pool_stats.block_reward }}</p>
+</div>
+<div class="card">
+    <h2>Min Payout</h2>
+    <p class="large-text">{{ pool_stats.min_payout }}</p>
+</div>
+<div class="card">
+    <h2>Total Blocks Mined</h2>
+    <p class="large-text">{{ pool_stats.total_blocks_mined }}</p>
+</div>
+<div class="card">
+    <h2>Blocks Mined (24h)</h2>
+    <p class="large-text">{{ pool_stats.blocks_mined_24h }}</p>
+</div>
+<div class="card">
+    <h2>Total Miners</h2>
+    <p class="large-text">{{ pool_stats.total_miners }}</p>
+</div>
+<div class="card">
+    <h2>Total Workers</h2>
+    <p class="large-text">{{ pool_stats.total_workers }}</p>
+</div>
+<div class="card">
+    <h2>Share Rate/hr</h2>
+    <p class="large-text">{{ pool_stats.share_rate_hr }}</p>
+</div>
+{% endblock %}

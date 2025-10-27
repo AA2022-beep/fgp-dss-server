@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="5">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSS Sync Server Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header><h1>DSS Sync Server (The Post Office)</h1></header>
+        <main>
+            <div class="column-container">
+                <!-- Left Column: Queue Status -->
+                <div class="column">
+                    <div class="card">
+                        <h2>Queue Status</h2>
+                        <p><span>Job Queue (Outgoing):</span> <span class="align-right">{{ stats.job_queue_size }}</span></p>
+                        <p><span>Result Queue (Incoming):</span> <span class="align-right">{{ stats.result_queue_size }}</span></p>
+                        <p><span>Monitor Queue (Broadcast):</span> <span class="align-right">{{ stats.monitor_queue_size }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Connected Clients ({{ stats.mining_clients|length }})</h2>
+                        <div class="client-list">
+                            {% for client_id in stats.mining_clients %}
+                                <div class="client-icon active">
+                                    <svg width="64" height="64" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M19 18H5V8h14m0-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2m-5 0h-4V4h4m0-2h-4a2 2 0 0 0-2 2v2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2Z"/>
+                                    </svg>
+                                    <span>{{ client_id[:8] }}...</span>
+                                </div>
+                            {% else %}
+                                <p class="no-clients">No mining clients connected.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Center Column: DSS Servers & Queue Snapshots -->
+                <div class="column-center">
+                    <div class="card">
+                        <h2>DSS Servers ({{ stats.dss_servers|length }})</h2>
+                        <div class="server-list">
+                            {% for server_id in stats.dss_servers %}
+                                <div class="server-icon active">
+                                    <svg width="128" height="128" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M4 2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2m0 4h16V4H4zm0 12h16v-4H4zm4-3h2v2H8zm-4 5h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2m4-3h2v2H8z"/>
+                                    </svg>
+                                    <span>{{ server_id }}</span>
+                                </div>
+                            {% else %}
+                                <div class="server-icon">
+                                   
+                                    <span>No DSS Servers connected to SyncServer.</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Job Queue Snapshot (First 5)</h2>
+                        <div class="console-log">
+                            {% for item in snapshots.job_queue %}
+                                <div class="console-line">{{ item }}</div>
+                            {% else %}
+                                <div class="console-line">Queue is empty.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Result Queue Snapshot (First 5)</h2>
+                        <div class="console-log">
+                            {% for item in snapshots.result_queue %}
+                                <div class="console-line">{{ item }}</div>
+                            {% else %}
+                                <div class="console-line">Queue is empty.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Monitor Snapshot -->
+                <div class="column">
+                    <div class="card">
+                        <h2>Monitor Queue Snapshot (First 5)</h2>
+                        <div class="console-log">
+                            {% for item in snapshots.monitor_queue %}
+                                <div class="console-line">{{ item }}</div>
+                            {% else %}
+                                <div class="console-line">Queue is empty.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <footer class="fixed-footer"><p>© 2025 FG Business Services Ltd. All Rights Reserved.</p></footer>
+</body>
+</html>
