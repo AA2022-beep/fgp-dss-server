@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raven Wallet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Title Block -->
+        <div class="title-block card">
+            <div class="logo">
+                <h1>Raven Wallet</h1>
+            </div>
+            
+            <div class="title-stats">
+                <div class="stat-item">
+                    <span class="label">Total RVN</span>
+                    <span class="value">{{ title_stats.total_rvn.split(' ')[0] }} <span class="unit">RVN</span></span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Available</span>
+                    <span class="value">{{ title_stats.available_rvn.split(' ')[0] }} <span class="unit">RVN</span></span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Pending</span>
+                    <span class="value">{{ title_stats.pending_rvn.split(' ')[0] }} <span class="unit">RVN</span></span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+                <a href="/logout" class="header-btn">Sign out</a>
+                <a href="#" class="header-btn green">Return to trading</a>
+                <div class="dropdown">
+                    <button class="header-btn dropdown-toggle">English <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                    <div class="dropdown-menu">
+                        <a href="#">English</a>
+                        <a href="#">Español</a>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="icon-btn user-btn dropdown-toggle"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg></button>
+                    <div class="dropdown-menu">
+                        <a href="#">User Settings</a>
+                        <a href="#">Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabbed Navigation -->
+        <div class="tabs">
+            <button class="tab-link active" onclick="openTab(event, 'Overview')">Overview</button>
+            <button class="tab-link" onclick="openTab(event, 'Send')">Send</button>
+            <button class="tab-link" onclick="openTab(event, 'Receive')">Receive</button>
+            <button class="tab-link" onclick="openTab(event, 'Assets')">Assets</button>
+            <button class="tab-link" onclick="openTab(event, 'Addresses')">Addresses</button>
+            <button class="tab-link" onclick="openTab(event, 'Transactions')">Transactions</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="Overview" class="tab-content" style="display: block;">
+            <div class="column-container">
+                <!-- Left Column: Wallet Actions -->
+                <div class="column">
+                    <div class="card-title"> <h2>BALANCE</h2></div>                    
+                    <div class="card">
+                        <p><span class="large-text">{{ wallet_data.balance_rvn.value }}</span> <span class="unit-text">{{ wallet_data.balance_rvn.unit }}</span></p>
+                    </div>
+                    <div class="card-title"><h2>Transfer Assets</h2></div>
+                    <div class="card">
+                        
+                        <p>Transfer assets to another address.</p>
+                    </div>
+                    <div class="card-title"><h2>Manage Assets</h2></div>
+                    <div class="card">
+                        
+                        <p>Create, manage, and issue assets.</p>
+                    </div>
+                    <div class="card-title"><h2>Restricted Assets</h2></div>
+                    <div class="card">
+                        
+                        <p>Manage restricted assets.</p>
+                    </div>
+                </div>
+
+                <!-- Middle Column: RVN Balances -->
+                <div class="column-center">
+                    <div class="card-title"><h1>RVN Balances</h1></div>
+                    <div class="card">
+                        
+                        <p>Available: <span class="medium-text">{{ wallet_data.balance_rvn.value }}</span> <span class="unit-text">{{ wallet_data.balance_rvn.unit }}</span></p>
+                        <p>Pending: <span class="medium-text">{{ wallet_data.pending_rvn.value }}</span> <span class="unit-text">{{ wallet_data.pending_rvn.unit }}</span></p>
+                        <hr>
+                        <p>Total: <span class="medium-text">{{ wallet_data.total_rvn.value }}</span> <span class="unit-text">{{ wallet_data.total_rvn.unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Request Specific Amount (Optional)</h2>
+                        <input type="number" step="any" min="0" placeholder="Amount in RVN">
+                        <h2>Message (Optional)</h2>
+                        <input type="text" placeholder="Add a message for the sender">
+                    </div>
+                </div>
+
+                <!-- Right Column: Recent Transactions -->
+                <div class="column">
+                    <div class="card-title"><h2>Recent Transactions</h2></div>
+                    <div class="card">
+                        
+                        <div class="activity-list">
+                            {% for tx in recent_transactions %}
+                                <div class="activity-item">
+                                    <span>{{ tx.date }} - {{ tx.type }}: {{ tx.amount }} ({{ tx.id[:6] }}...)</span>
+                                </div>
+                            {% else %}
+                                <p>No recent transactions.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="Send" class="tab-content">
+            <div class="column-container">
+                <!-- Left Column: Recently Sent Addresses -->
+                <div class="column-center">
+                    <div class="card-title">
+                        <h2>Recently Sent Addresses</h2>
+                    </div>
+                   
+                    <div class="card">
+                       
+                        <div class="activity-list">
+                            {% for address in recently_sent_addresses %}
+                                <div class="activity-item">
+                                    <span>{{ address.address }}</span><br>
+                                    <span>Amount: {{ address.amount }} RVN</span><br>
+                                    <span class="unit-text">Confirmations: {{ address.confirmations }}</span>
+                                </div>
+                            {% else %}
+                                <p>No recently sent addresses.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-title">
+                        <h2>Address Book</h2>
+                    </div>
+                    <div class="card">
+                        <div class="activity-list">
+                            {% for entry in address_book %}
+                                <div class="activity-item address-book-entry" data-address="{{ entry.address }}" style="cursor: pointer;">
+                                    <span>{{ entry.label }}</span><br>
+                                    <span class="unit-text">Tx Type: {{ entry.tx_type | capitalize }}</span><br>
+                                    {% if entry.tx_type == 'sent' %}
+                                        <span style="color: #e94560;">Last Amount: {{ entry.last_amount }} RVN</span>
+                                    {% else %}
+                                        <span style="color: #28a745;">Last Amount: +{{ entry.last_amount }} RVN</span>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <p>Your address book is empty.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Column: Send Form and Calculated Fees -->
+                <div class="column-center">
+                    <div class="card">
+                        <h2>Send To</h2>
+                        <input type="text" id="send-address" placeholder="Recipient Address">
+                        <h2>Label (Optional)</h2>
+                        <input type="text" id="send-label" placeholder="Address Label (e.g., Exchange, Friend)">
+                        <h2>Amount (RVN)</h2>
+                        <input type="number" step="any" min="0" id="send-amount" placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Right Column: Fee Options -->
+                <div class="column">
+                    <div class="card-title"><h2>Fee Options</h2></div>
+                    <div class="card">
+                        
+                        <div class="fee-options">
+                            <label class="radio-container">Recommended
+                                <input type="radio" checked="checked" name="fee_option" value="recommended">
+                                <span class="checkmark"></span>
+                            </label>
+                            <label class="radio-container">Custom Fees
+                                <input type="radio" name="fee_option" value="custom">
+                                <span class="checkmark"></span>
+                            </label>
+                            <input type="number" step="any" min="0" placeholder="0.00" class="custom-fee-input" disabled>
+                            <span class="unit-text">RVN / kByte</span>
+                        </div>
+                        
+                    <div class="card">
+                        <div class="card-title"><h1>Calculated Fees</h1></div>
+                        <p class="amount-label">Fee: <span class="align-right" id="transaction-fee"> 0.001 <span class="unit-text">RVN</span></span></p>
+                        <div class="divider"></div>
+                        <p>Total: <span class="align-right" id="transaction-total">0.001 <span class="unit-text">RVN</span></span></p>
+                    </div>
+                    </div>
+                    
+                    <div class="card-title">
+                        <h2>Recent Transactions</h2>
+                    </div>
+                    <div class="card">
+                        <div class="activity-list">
+                            {% for tx in recent_transactions %}
+                                <div class="activity-item">
+                                    <span>{{ tx.date }} - {{ tx.type }}: {{ tx.amount }} ({{ tx.id[:6] }}...)</span>
+                                </div>
+                            {% else %}
+                                <p>No recent transactions.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="button-row flex-buttons">
+                <button class="send-button" id="send-rvn-button" style="flex-grow: 2;">Send</button>
+                <button class="save-button" id="save-invoice-button" style="background-color: #007bff; flex-grow: 1;">Save</button>
+                <button class="clear-button danger" id="clear-send-form">Clear</button>
+            </div>
+
+           
+        </div>
+         
+        
+
+        <div id="Receive" class="tab-content">
+            <div class="column-container">
+                <div class="column">
+                    <div class="card-title">
+                        <h2>Add to Address Book</h2>
+                    </div>
+                    <div class="card">
+                        <div id="add-to-book-form">
+                            <h2>Label</h2>
+                            <input type="text" id="new-book-label" placeholder="Contact Name">
+                            <h2>Address</h2>
+                            <input type="text" id="new-book-address" placeholder="RVN Address">
+                            <button class="send-button" id="add-to-book-button" style="margin-top: 10px;">Save to Book</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Column: Your Raven Wallet Address -->
+                <div class="column-center">
+                    <div class="card">
+                        <h2>Your Raven Wallet Address</h2>
+                        <select id="receive-address-select" style="margin-bottom: 15px;">
+                            {% for addr in receiving_addresses %}
+                            <option value="{{ addr }}">{{ addr }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="wallet-address-display">{{ wallet_address }}</p>
+                        <div class="qr-code-placeholder" id="receive-qr-code"></div>
+                        <button class="copy-address-button" id="copy-address-button">Copy Address</button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Request Specific Amount -->
+                <div class="column">
+                    <div class="card">
+                        <h2>Request Specific Amount (Optional)</h2>
+                        <input type="number" step="any" min="0" id="request-amount" placeholder="Amount in RVN">
+                        <h2>Message (Optional)</h2>
+                        <input type="text" id="request-message" placeholder="Add a message for the sender">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="Assets" class="tab-content">
+            {% include 'asset-gen.html' %}
+        </div>
+
+        <div id="Addresses" class="tab-content">
+            <div class="card">
+                <h2>My Addresses</h2>
+                <table class="addresses-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Type</th>
+                            <th style="width: 32%;">Address</th>
+                            <th style="width: 20%;">Label</th>
+                            <th style="width: 12%;">Balance</th>
+                            <th style="width: 10%;">Assets</th>
+                            <th style="width: 8%;">Tags</th>
+                            <th style="width: 8%;">Tx</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- This will be populated dynamically from the backend -->
+                        <tr>
+                            <td>Receiving</td>
+                            <td>RX_ADDRESS_PLACEHOLDER_1234567890ABCDEF</td>
+                            <td>My Main Address</td>
+                            <td>1,234.56 RVN</td>
+                            <td>5</td>
+                            <td>Primary</td>
+                            <td>150</td>
+                        </tr>
+                        <!-- More rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="Transactions" class="tab-content">
+            <div class="card">
+                <h2>Transaction History</h2>
+                <p>Detailed transaction history will be displayed here.</p>
+            </div>
+        </div>
+
+        
+    </div>
+    
+    <script>
+        // Register FilePond plugins
+        FilePond.registerPlugin(FilePondPluginImagePreview);
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Style for the pay button
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .pay-invoice-btn { background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+            .pay-invoice-btn:hover { background-color: #218838; }
+        `;
+        document.head.appendChild(style);
+
+
+        // JavaScript for Send tab functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const sendAddressInput = document.getElementById('send-address');
+            const sendLabelInput = document.getElementById('send-label');
+            const sendAmountInput = document.getElementById('send-amount');
+            const sendRvnButton = document.getElementById('send-rvn-button');
+            const clearSendFormButton = document.getElementById('clear-send-form');
+            const transactionFeeSpan = document.getElementById('transaction-fee');
+            const transactionTotalSpan = document.getElementById('transaction-total');
+
+            // Mock fee calculation (replace with real logic later)
+            function updateFeeDisplay() {
+                const amount = parseFloat(sendAmountInput.value) || 0;
+                const fee = 0.001; // Example fixed fee
+                transactionFeeSpan.textContent = `${fee.toFixed(8)} RVN`;
+                transactionTotalSpan.textContent = `${(amount + fee).toFixed(8)} RVN`;
+            }
+
+            sendAmountInput.addEventListener('input', updateFeeDisplay);
+
+            clearSendFormButton.addEventListener('click', () => {
+                sendAddressInput.value = '';
+                sendLabelInput.value = '';
+                sendAmountInput.value = '';
+                updateFeeDisplay();
+            });
+
+            sendRvnButton.addEventListener('click', async () => {
+                const address = sendAddressInput.value;
+                const amount = sendAmountInput.value;
+                const label = sendLabelInput.value;
+
+                if (!address || !amount) {
+                    alert('Please enter a recipient address and amount.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/send_rvn', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ address, amount, label })
+                    });
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        alert(`Transaction sent! TXID: ${result.txid}`);
+                        clearSendFormButton.click(); // Clear form on success
+                        location.reload(); // Refresh to update balances/transactions
+                    } else {
+                        alert(`Error sending transaction: ${result.message}`);
+                    }
+                } catch (error) {
+                    alert(`Network error: ${error}`);
+                }
+            });
+
+            // JavaScript for Save Invoice button
+            const saveInvoiceButton = document.getElementById('save-invoice-button');
+            if (saveInvoiceButton) {
+                saveInvoiceButton.addEventListener('click', async () => {
+                    const address = sendAddressInput.value;
+                    const amount = sendAmountInput.value;
+                    const label = sendLabelInput.value;
+
+                    if (!address || !amount || !label) {
+                        alert('To save an invoice, please provide a Recipient Address, an Amount, and a Label (for the description).');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/save_invoice', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ address, amount, label })
+                        });
+                        const result = await response.json();
+
+                        if (result.status === 'success') {
+                            alert(result.message);
+                            // Add new row to the table dynamically
+                            const tableBody = document.querySelector('#invoices-table tbody');
+                            const newRow = tableBody.insertRow(0); // Insert at the top
+                            newRow.innerHTML = `
+                                <td>${result.invoice.date}</td>
+                                <td>${result.invoice.description}</td>
+                                <td>${result.invoice.asset}</td>
+                                <td>${result.invoice.amount}</td>
+                                <td>${result.invoice.status}</td>
+                            `;
+                            clearSendFormButton.click(); // Clear the form
+                        } else {
+                            alert(`Error saving invoice: ${result.message}`);
+                        }
+                    } catch (error) {
+                        alert(`Network error: ${error}`);
+                    }
+                });
+            }
+
+            // JavaScript for Receive tab functionality
+            const copyAddressButton = document.getElementById('copy-address-button');
+            const walletAddressDisplay = document.querySelector('.wallet-address-display');
+            const receiveAddressSelect = document.getElementById('receive-address-select');
+
+            if (copyAddressButton && walletAddressDisplay) {
+                copyAddressButton.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(walletAddressDisplay.textContent);
+                        alert('Wallet address copied to clipboard!');
+                    } catch (err) {
+                        console.error('Failed to copy: ', err);
+                        alert('Failed to copy address.');
+                    }
+                });
+            }
+
+            // QR Code Generation
+            const qrCodeContainer = document.getElementById('receive-qr-code');
+            let qrcode = null;
+
+            function generateQrCode(address) {
+                // Clear previous QR code
+                qrCodeContainer.innerHTML = '';
+                // Generate new QR code
+                qrcode = new QRCode(qrCodeContainer, {
+                    text: address,
+                    width: 150,
+                    height: 150,
+                    colorDark: "#ffffff",
+                    colorLight: "#3e416d",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+
+            // Initial QR code generation
+            if (qrCodeContainer && walletAddressDisplay.textContent) {
+                generateQrCode(walletAddressDisplay.textContent);
+            }
+        });
+
+        // JavaScript for Address Book click functionality
+        document.querySelectorAll('.address-book-entry').forEach(entry => {
+            entry.addEventListener('click', () => {
+                const address = entry.dataset.address;
+                const sendAddressInput = document.getElementById('send-address');
+                sendAddressInput.value = address;
+                // Optionally, focus the input field
+                sendAddressInput.focus();
+            });
+        });
+    </script>
+    <div class="container invoices-row">
+        <div class="column">
+            <!--Pending Invoices Table -->
+            <div class="card-title"><h2>Pending Invoices</h2></div>
+            <div class="card" >
+                
+                <table class="addresses-table" id="invoices-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Asset</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                            {% if invoice.status == 'Unpaid' %}
+                            <tr data-invoice-id="{{ invoice.id }}">
+                                <td>{{ invoice.date }}</td>
+                                <td>{{ invoice.description }}</td>
+                                <td>{{ invoice.asset }}</td>
+                                <td>{{ invoice.amount }}</td>
+                                <td class="invoice-status">{{ invoice.status }}</td>
+                                <td class="invoice-action"><button class="pay-invoice-btn" data-id="{{ invoice.id }}">Pay</button></td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+            <!-- Paid Invoices Table -->
+        <div class="column">
+            <div class="card-title"> <h2>Invoices Paid</h2></div>
+            <div class="card" >
+                
+                <table class="addresses-table" id="paid-invoices-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Asset</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices | sort(attribute='date', reverse=true) %}
+                            {% if invoice.status == 'Paid' %}
+                            <tr><td>{{ invoice.date }}</td><td>{{ invoice.description }}</td><td>{{ invoice.asset }}</td><td>{{ invoice.amount }}</td><td>{{ invoice.status }}</td></tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <footer class="fixed-footer">
+        
+        <p>© Copyright 2025 FG Business Services (UK) Ltd. All rights reserved.</p>
+    </footer>
+</body>
+</html>

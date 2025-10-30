@@ -1,0 +1,159 @@
+ <div class="column-container">
+                <!-- Left Column: Generated Assets (Tabs) -->
+                <div class="column">
+                    <!-- This column is now intentionally empty to preserve the 3-column layout -->
+                </div>
+
+                <!-- Middle Column: Generate New Asset -->
+                <div class="column-center">
+                    <div class="card">
+                        <h1 class="card-title">Generate New Asset</h1>
+                        <label for="asset-type">Asset Category:</label>
+                        <select id="asset-type" onchange="updateAssetSubtypes()">
+                            <option value="rwa">Real World Assets (RWA)</option>
+                            <option value="digital">Digital Assets</option>
+                            <option value="credentials">Certificates & Credentials</option>
+                        </select>
+
+                        <label for="asset-subtype">Asset Type:</label>
+                        <select id="asset-subtype">
+                            <!-- Options will be populated by updateAssetSubtypes() -->
+                        </select>
+
+                        <label for="asset-name">Asset Name (e.g., MYPROPERTY, COMPANY.STOCK, MYITEM!):</label>
+                        <input type="text" id="asset-name" placeholder="Enter unique asset name">
+
+                        <label for="asset-quantity">Quantity:</label>
+                        <input type="number" id="asset-quantity" value="1" min="1">
+
+                        <label for="asset-divisible">Divisibility:</label>
+                        <select id="asset-divisible">
+                            <option value="0">Not Divisible (0 decimals)</option>
+                            <option value="1">1 Decimal Place</option>
+                            <option value="2">2 Decimal Places</option>
+                            <option value="4">4 Decimal Places</option>
+                            <option value="8">8 Decimal Places</option>
+                        </select>
+
+                        <label for="asset-metadata-ipfs">Metadata IPFS Hash (Optional):</label>
+                        <input type="text" id="asset-metadata-ipfs" placeholder="QmW123...">
+
+                        <div class="card" style="padding: 15px; margin-top: 20px; background-color: #2c2f48;">
+                            <h2 style="margin-top:0; margin-bottom: 15px;">Upload Files (Optional)</h2>
+                            <input type="file" class="filepond" name="filepond" multiple>
+                        </div>
+
+                        <button id="create-asset-button" style="margin-top: 20px;">Create Asset</button>
+
+                    </div>
+
+                    <!-- Generated Assets Table -->
+                    <div class="card">
+                        <h1 class="card-title">Generated Assets</h1>
+                        <div class="generated-asset-tabs">
+                            <div class="generated-asset-tab-links">
+                                <div class="generated-asset-tab-link active" onclick="openGeneratedAssetTab(event, 'rwa')">RWA</div>
+                                <div class="generated-asset-tab-link" onclick="openGeneratedAssetTab(event, 'digital')">Digital</div>
+                                <div class="generated-asset-tab-link" onclick="openGeneratedAssetTab(event, 'credentials')">Credentials</div>
+                            </div>
+    
+                            <div id="rwa" class="generated-asset-tab-content active">
+                                <table class="addresses-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Asset Name</th>
+                                            <th>Symbol</th>
+                                            <th>Quantity</th>
+                                            <th>Divisible</th>
+                                            <th>Owner</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>My Real Estate Token</td>
+                                            <td>MYHOME</td>
+                                            <td>100 / 100</td>
+                                            <td>No</td>
+                                            <td>RVN_ADDR_123...</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Fractional Gold Share</td>
+                                            <td>GOLD.SHARE</td>
+                                            <td>500 / 1000</td>
+                                            <td>Yes (2 dec)</td>
+                                            <td>RVN_ADDR_XYZ...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p class="no-clients">No more RWA assets generated.</p>
+                            </div>
+    
+                            <div id="digital" class="generated-asset-tab-content">
+                                <table class="addresses-table">
+                                    <thead><tr><th>Asset Name</th><th>Symbol</th><th>Quantity</th><th>Divisible</th><th>Owner</th></tr></thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Rare Collectible NFT</td>
+                                            <td>ARTWORK_001!</td>
+                                            <td>1 / 1</td>
+                                            <td>No</td>
+                                            <td>RVN_ADDR_A1B2...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p class="no-clients">No more Digital assets generated.</p>
+                            </div>
+    
+                            <div id="credentials" class="generated-asset-tab-content">
+                                <table class="addresses-table">
+                                    <thead><tr><th>Asset Name</th><th>Symbol</th><th>Quantity</th><th>Divisible</th><th>Owner</th></tr></thead>
+                                    <tbody><tr><td>Voting Right 2024</td><td>VOTE_2024</td><td>1000 / 1000</td><td>No</td><td>RVN_ADDR_C3D4...</td></tr></tbody>
+                                </table>
+                                <p class="no-clients">No more Certificates & Credentials generated.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Asset Information (Accordion) -->
+                <div class="column">
+                    <h1 class="card-title">Asset Information</h1>
+                    <div class="accordion-container">
+                        <button class="accordion" onclick="toggleAccordion(event)">Real World Assets (RWA)</button>
+                        <div class="panel">
+                            <p>Tokens representing tangible assets like real estate, gold, or company shares. Often requires legal backing.</p>
+                            <ul>
+                                <li><strong>Real Estate:</strong> Fractional ownership of property.</li>
+                                <li><strong>Commodities:</strong> Gold, silver, oil, tokenized to represent units of the physical asset.</li>
+                                <li><strong>Art & Collectibles:</strong> Provenance and ownership for high-value physical items.</li>
+                                <li><strong>Company Shares:</strong> Digital representation of equity in a business, potentially regulated as securities.</li>
+                                <li><strong>Debt Instruments:</strong> Bonds or loans represented by tokens.</li>
+                            </ul>
+                        </div>
+
+                        <button class="accordion" onclick="toggleAccordion(event)">Digital Assets</button>
+                        <div class="panel">
+                            <p>Tokens purely existing in the digital realm, often for use in software or virtual environments.</p>
+                            <ul>
+                                <li><strong>In-Game Items:</strong> Exclusive virtual items, weapons, or land within games.</li>
+                                <li><strong>Software Licenses:</strong> Tokens that grant usage rights to software.</li>
+                                <li><strong>Digital Art (NFTs):</strong> Unique, non-fungible tokens for digital creations.</li>
+                                <li><strong>Access Tokens:</strong> Grants access to premium digital content or communities.</li>
+                            </ul>
+                        </div>
+
+                        <button class="accordion" onclick="toggleAccordion(event)">Certificates & Credentials</button>
+                        <div class="panel">
+                            <p>Tokens used for verifiable records, voting, or loyalty programs.</p>
+                            <ul>
+                                <li><strong>Voting Rights:</strong> Tokens granting the ability to vote on proposals or corporate decisions.</li>
+                                <li><strong>Loyalty Points:</strong> Rewards or points for customer loyalty programs.</li>
+                                <li><strong>Certificates:</strong> Digital diplomas, licenses, or authenticity certificates.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>

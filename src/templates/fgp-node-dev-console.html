@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FGP Mock Node</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .console-output {
+            background: #232436;
+            border: 1px solid #4a4d80;
+            padding: 12px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #cdd0e8;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .console-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .console-input {
+            flex-grow: 1;
+            background-color: #232436;
+            border: 1px solid #5a5d9a;
+            color: #cdd0e8;
+        }
+        .console-line {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(74,77,128,0.15);
+        }
+        .console-line.command {
+            color: #7b4dff;
+            font-weight: bold;
+        }
+        .console-line.response {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Title Block -->
+        <div class="title-block card">
+            <div class="logo">
+                <h1>FGP Mock Node</h1>
+            </div>
+        </div>
+
+        <div class="column-container">
+            <!-- Left Column: Server Status -->
+            <div class="column">
+                <div class="card">
+                    <h2>Server Status</h2>
+                    <p>Status: <span class="green">Online</span></p>
+                    <p>Port: <span>8765</span></p>
+                    <p>Type: <span>Mock RavenCoin Node</span></p>
+                </div>
+            </div>
+
+            <!-- Middle Column: Console -->
+            <div class="column-center">
+                <div class="card">
+                    <h2>Node RPC Console</h2>
+                    <div id="console-output" class="console-output">
+                        <div class="console-line">Welcome to the Mock Node RPC Console.</div>
+                        <div class="console-line">Type a command and press Enter. e.g., 'getbalance' or 'listtransactions'</div>
+                    </div>
+                    <div class="console-input-container">
+                        <input type="text" id="console-input" class="console-input" placeholder="Enter RPC command...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Empty -->
+            <div class="column">
+                <!-- This column is intentionally left blank for future use -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const consoleOutput = document.getElementById('console-output');
+            const consoleInput = document.getElementById('console-input');
+
+            function addLog(message, type = 'log') {
+                const line = document.createElement('div');
+                line.className = `console-line ${type}`;
+                if (type === 'response') {
+                    line.textContent = JSON.stringify(message, null, 2);
+                } else {
+                    line.textContent = message;
+                }
+                consoleOutput.appendChild(line);
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            }
+
+            consoleInput.addEventListener('keydown', async (event) => {
+                if (event.key === 'Enter') {
+                    const commandStr = consoleInput.value.trim();
+                    if (!commandStr) return;
+
+                    addLog(`> ${commandStr}`, 'command');
+                    consoleInput.value = '';
+
+                    const [method, ...paramsStr] = commandStr.split(' ');
+                    const params = paramsStr.map(p => {
+                        try { return JSON.parse(p); } catch { return p; }
+                    });
+
+                    const response = await fetch('/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ jsonrpc: '1.0', id: 'console', method: method, params: params })
+                    });
+                    const result = await response.json();
+                    addLog(result, 'response');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

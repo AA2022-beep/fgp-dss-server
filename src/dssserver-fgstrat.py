@@ -293,6 +293,9 @@ def get_pools():
         }
     })
 
+# --- Global Distributor Instance ---
+distributor = Distributor(sync_addr=('127.0.0.1',8625), auth="769ac424-adb6-5a73-83b0-d22eb27e543b")
+
 if __name__ == '__main__':
-    distributor = Distributor(sync_addr=('127.0.0.1',8625), auth="769ac424-adb6-5a73-83b0-d22eb27e543b")
+    # The distributor is now created globally above.
     app.run(host='0.0.0.0', port=8080, debug=False)
