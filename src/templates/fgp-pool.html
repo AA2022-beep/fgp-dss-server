@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FGP Pool</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -13,6 +14,10 @@
             <div class="logo">
                 <h1>FGP Pool</h1>
             </div>
+            <button id="theme-toggle" class="theme-toggle">
+                <span class="icon-sun">☀️</span>
+                <span class="icon-moon">🌙</span>
+            </button>
             <div class="title-stats">
                 <div class="stat-item">
                     <span class="label">Total Paid</span>
@@ -46,23 +51,100 @@
         <!-- Tab Content -->
         <div id="Home" class="tab-content" style="display: block;">
             <div class="column-container">
+                <!-- Left Column (Pool Stats) -->
                 <div class="column">
+                    <div class="card">
+                        <h2>RVN Price</h2>
+                        <p><span class="large-text">{{ pool_stats.rvn_price_value }}</span> <span class="unit-text">{{ pool_stats.rvn_price_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Pool Hashrate</h2>
+                        <p><span class="large-text">{{ pool_stats.pool_hashrate_value }}</span> <span class="unit-text">{{ pool_stats.pool_hashrate_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Current Block</h2>
+                        <p><span class="large-text">{{ pool_stats.current_block_info_value }}</span> <span class="unit-text">{{ pool_stats.current_block_info_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Block Reward</h2>
+                        <p><span class="large-text">{{ pool_stats.block_reward_value }}</span> <span class="unit-text">{{ pool_stats.block_reward_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Min Payout</h2>
+                        <p><span class="large-text">{{ pool_stats.min_payout_value }}</span> <span class="unit-text">{{ pool_stats.min_payout_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Total Blocks Mined</h2>
+                        <p><span class="large-text">{{ pool_stats.total_blocks_mined_value }}</span> <span class="unit-text">{{ pool_stats.total_blocks_mined_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Blocks Mined (24h)</h2>
+                        <p><span class="large-text">{{ pool_stats.blocks_mined_24h_value }}</span> <span class="unit-text">{{ pool_stats.blocks_mined_24h_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Total Miners</h2>
+                        <p><span class="large-text">{{ pool_stats.total_miners_value }}</span> <span class="unit-text">{{ pool_stats.total_miners_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Total Workers</h2>
+                        <p><span class="large-text">{{ pool_stats.total_workers_value }}</span> <span class="unit-text">{{ pool_stats.total_workers_unit }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Share Rate/hr</h2>
+                        <p><span class="large-text">{{ pool_stats.share_rate_hr_value }}</span> <span class="unit-text">{{ pool_stats.share_rate_hr_unit }}</span></p>
+                    </div>
+                </div>
+                <!-- Center Column (Miners Online & Recent Blocks) -->
+                <div class="column-center">
                     <div class="card">
                         <h2>Welcome</h2>
                         <p>{{ home_content.welcome_message }}</p>
                     </div>
-                </div>
-                <div class="column-center">
                     <div class="card">
-                        <h2>Key Features</h2>
+                        <h2>Miners Online</h2>
+                        <div class="client-list">
+                            {% for miner in miners_online %}
+                                <div class="client-card {{ 'active' if miner.status == 'Active' }}">
+                                    <div class="client-info">{{ miner.name }}</div>
+                                    <div class="client-hashrate">Luck: {{ miner.luck }}</div>
+                                    <div class="client-hashrate">Min Payout: {{ miner.min_payout }}</div>
+                                    <div class="client-hashrate">Status: {{ miner.status }}</div>
+                                </div>
+                            {% else %}
+                                <p class="no-clients">No miners online.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Recent Blocks (Max 30)</h2>
+                        <div class="activity-list" style="max-height: 300px; overflow-y: auto;">
+                            {% for block in recent_blocks %}
+                                <div class="activity-item">
+                                    <span>Height: {{ block.height }}</span>
+                                    <span>Hash: {{ block.hash }}</span>
+                                    <span>Time: {{ block.timestamp }}</span>
+                                    <span>Reward: {{ block.reward }}</span>
+                                </div>
+                            {% else %}
+                                <p>No recent blocks.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column (Connection Details, Buy Hashpower, How-to, Welcome, Features, News) -->
+                <div class="column">
+                    <div class="card">
+                        <h2>Pool Hashrate (GH/s)</h2>
+                        <canvas id="hashrateChart"></canvas>
+                    </div>
+                    <div class="card">
+                        <h2>Pool Features</h2>
                         <ul>
                             {% for feature in home_content.pool_features %}
                                 <li>{{ feature }}</li>
                             {% endfor %}
                         </ul>
                     </div>
-                </div>
-                <div class="column">
                     <div class="card">
                         <h2>Latest News</h2>
                         {% for item in home_content.news %}
@@ -70,6 +152,36 @@
                                 <strong>{{ item.date }}:</strong> {{ item.title }}
                             </div>
                         {% endfor %}
+                    </div>
+                    <div class="card">
+                        <h2>Connection Details</h2>
+                        <p><span>Stratum Host:</span> <span class="align-right">{{ connection_details.stratum_host }}</span></p>
+                        <p><span>Stratum Port:</span> <span class="align-right">{{ connection_details.stratum_port }}</span></p>
+                        <p><span>Username:</span> <span class="align-right">{{ connection_details.username }}</span></p>
+                        <p><span>Password:</span> <span class="align-right">{{ connection_details.password }}</span></p>
+                    </div>
+                    <div class="card">
+                        <h2>Buy Hashpower</h2>
+                        <div class="client-list">
+                            {% for provider in hash_power %}
+                                <div class="client-card">
+                                    <div class="client-info">{{ provider.provider }}</div>
+                                    <div class="client-hashrate">{{ provider.price }}</div>
+                                </div>
+                            {% else %}
+                                <p>No hash power available.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>How-to</h2>
+                        <div class="activity-list">
+                            {% for link in how_to_links %}
+                                <div class="activity-item"><a href="{{ link.url }}">{{ link.title }}</a></div>
+                            {% else %}
+                                <p>No links available.</p>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -134,6 +246,66 @@
             document.getElementById(tabName).style.display = "block";
             evt.currentTarget.className += " active";
         }
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        // Check for saved theme preference
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme) {
+            body.classList.add(currentTheme);
+        } else {
+            body.classList.add('dark-theme'); // Default to dark theme
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('dark-theme')) {
+                body.classList.replace('dark-theme', 'light-theme');
+                localStorage.setItem('theme', 'light-theme');
+            } else {
+                body.classList.replace('light-theme', 'dark-theme');
+                localStorage.setItem('theme', 'dark-theme');
+            }
+        });
+
+        // Chart.js for Pool Hashrate Chart
+        const hashrateLabels = JSON.parse('{{ hashrate_chart_data.labels | tojson }}');
+        const hashrateData = JSON.parse('{{ hashrate_chart_data.data | tojson }}');
+
+        const hashrateCtx = document.getElementById('hashrateChart').getContext('2d');
+        const hashrateChart = new Chart(hashrateCtx, {
+            type: 'line',
+            data: {
+                labels: hashrateLabels,
+                datasets: [{
+                    label: 'Pool Hashrate',
+                    data: hashrateData,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)', // Add background color for the area
+                    tension: 0.4, // Increase tension for smoother curves
+                    fill: true // Fill the area under the line
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hashrate (GH/s)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>

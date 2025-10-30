@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FGP Node Console</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            flex: 1;
+        }
+        .console-output {
+            background: #232436;
+            border: 1px solid #4a4d80;
+            padding: 12px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #cdd0e8;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .console-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .console-input {
+            flex-grow: 1;
+            background-color: #232436;
+            border: 1px solid #5a5d9a;
+            color: #cdd0e8;
+        }
+        .console-line {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(74,77,128,0.15);
+        }
+        .console-line.command {
+            color: #7b4dff;
+            font-weight: bold;
+        }
+        .console-line.response {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        /* Accordion Styles */
+        .accordion-container { margin-top: 15px; }
+        .accordion-container .accordion-title { font-size: 1.4em; margin-top: 0; margin-bottom: 10px; color: #fff; }
+        .accordion {
+            background-color: #3e416d;
+            color: #cdd0e8;
+            cursor: pointer;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 0.9em;
+            transition: 0.4s;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+        .accordion:hover, .accordion.active {
+            background-color: #5a5d9a;
+        }
+        .accordion:after {
+            content: '\\002B'; /* Plus sign */
+            color: #cdd0e8;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+        }
+        .accordion.active:after {
+            content: "\\2212"; /* Minus sign */
+        }
+        .panel {
+            padding: 0 18px;
+            background-color: #2c2f48;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-radius: 0 0 4px 4px;
+            font-size: 0.85em;
+        }
+        .panel p { font-size: 1em; }
+        .panel code { background-color: #232436; padding: 2px 5px; border-radius: 3px; }
+        .panel .execute-btn {
+            background-color: #7b4dff;
+            color: #fff;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: #1a1b2a; /* Dark color matching the theme */
+            flex-shrink: 0; /* Prevent footer from shrinking */
+            color: #8a8ca8;
+            padding: 20px 0;
+            margin-top: 30px;
+            border-top: 1px solid #4a4d80;
+            width: 100%;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px; /* Match main container width */
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-left p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        .footer-center {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-center a {
+            color: #cdd0e8;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer-center a:hover { color: #7b4dff; }
+        .footer-center svg { width: 22px; height: 22px; fill: currentColor; }
+
+        .footer-right { display: flex; gap: 20px; }
+        .footer-right a {
+            color: #cdd0e8;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: color 0.3s;
+        }
+        .footer-right a:hover { color: #fff; }
+
+        /* Add Wallet Form Styles */
+        .add-wallet-form {
+            display: none; /* Hidden by default */
+            padding: 10px 16px;
+            align-items: center;
+            gap: 8px;
+        }
+        .add-wallet-form input {
+            flex-grow: 1;
+            padding: 6px;
+            background-color: #232436;
+            border: 1px solid #5a5d9a;
+            color: #cdd0e8;
+            border-radius: 4px;
+        }
+        .add-wallet-form .save-wallet-btn {
+            background-color: #28a745;
+            border: none;
+            color: white;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            line-height: 1; /* For the checkmark */
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="title-block card">
+            <!-- Left Column: Title -->
+            <div class="logo">
+                <h1>FGP Node Console</h1>
+            </div>
+
+            <!-- Middle Column: Wallet Selector -->
+            <div class="header-actions">
+                <div class="dropdown">
+                    <button class="header-btn dropdown-toggle">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        {{ wallets[0].name if wallets else 'No Wallet' }}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 8px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div id="wallet-list">
+                        {% for wallet in wallets %}
+                            <a href="#">{{ wallet.name }}</a>
+                        {% endfor %}
+                        </div>
+                        <a id="add-wallet-btn" href="#" style="border-top: 1px solid #5a5d9a;">+ Add Wallet</a>
+                        <div id="add-wallet-form" class="add-wallet-form" style="border-top: 1px solid #5a5d9a;">
+                            <input type="text" id="new-wallet-name-input" placeholder="New wallet name...">
+                            <button id="save-wallet-btn" class="save-wallet-btn">&#10004;</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Language and User Profile -->
+            <div class="header-actions">
+                <div class="dropdown">
+                    <button class="header-btn dropdown-toggle">English <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                    <div class="dropdown-menu">
+                        <a href="#">English</a>
+                        <a href="#">Español</a>
+                        <a href="#">Français</a>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="icon-btn user-btn dropdown-toggle">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="#">User Settings</a>
+                        <a href="#">Profile</a>
+                        <a id="logout-link" href="/logout" style="border-top: 1px solid #5a5d9a;">Sign Out</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="column-container">
+            <!-- Left Column: Server Status -->
+            <div class="column">
+                <a href="/" class="header-btn" style="text-decoration: none; justify-content: center;">Return to Wallet</a>
+                <div class="card" style="margin-top: 1em;"> <h2 class="card-title">Raven Node:</h2></div>
+                <div class="card">
+                    <p><h2><span>Status:</h2> <span class="green">Online</span></p> 
+                </div>
+                <div class="card"> 
+                    <p><h2><span>Type:</h2> <span>Mock RavenCoin Node</span></p>
+                </div>
+                <div class="card" style="margin-top: 1em;"> <h2 class="card-title">Block Info</h2></div>
+                <div class="card"> <p><h2>Block Height:</h2> <span>3,456,789</span></p> </div>
+                <div class="card"><p><h2>Difficulty:</h2> <span>123,456.78</span></p></div>
+                <div class="card"><p><h2>Chain:</h2> <span>main</span></p>  </div>
+                <div class="card" style="margin-top: 1em;"> <h2 class="card-title">Mempool Status</h2></div>
+                <div class="card"> <p><h2>Transactions:</h2> <span>152</span></p> </div>
+                <div class="card"><p><h2>Size:</h2> <span>1.2 MB</span></p></div>
+                <div class="card"><p><h2>Min Fee:</h2> <span>0.0001 RVN/kB</span></p></div>
+                    
+                    
+                
+                <div class="card" style="margin-top: 1em;"> <h2 class="card-title">Network Info</h2></div>
+                <div class="card">
+                    <p><h2>Peers Connected:</h2> <span>8</span></p></div>
+                <div class="card">
+                    <p><h2>Network Hashrate:</h2> <span>15.2 TH/s</span></p>
+                </div>
+                <div class="card" style="margin-top: 1em;"> <h2 class="card-title">Wallet Info</h2></div>
+                <div class="card">
+                    <p><h2>Version:</h2> <span>v4.3.2.1</span></p></div>
+                <div class="card">
+                    <p><h2>Tx Count:</h2> <span>1,204</span></p>
+                </div>
+            </div>
+
+            <!-- Middle Column: Console -->
+            <div class="column-center">
+                <div class="card">
+                    <h2>Node RPC Console</h2>
+                    <div id="console-output" class="console-output">
+                        <div class="console-line">Welcome to the Mock Node RPC Console.</div>
+                        <div class="console-line">Type a command and press Enter. e.g., 'getbalance' or 'listtransactions'</div>
+                    </div>
+                    <div class="console-input-container">
+                        <input type="text" id="console-input" class="console-input" placeholder="Enter RPC command...">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div id="recent-commands-container" class="accordion-container" style="margin-top: 0;">
+                        <h3 class="accordion-title">Recent Commands</h3>
+
+                        {% if recent_commands %}
+                            {% for cmd in recent_commands %}
+                                <button class="accordion">{{ cmd.command }}</button>
+                                <div class="panel">
+                                    <p><strong>Executed at:</strong> <code>{{ cmd.timestamp }}</code></p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p id="no-recent-commands">No recent commands found.</p>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Available Commands -->
+            <div class="column">
+                <div class="card">
+                    <div class="accordion-container" style="margin-top: 0;">
+                        <h3 class="accordion-title">Available Commands</h3>
+
+                        <!-- General Node Information -->
+                        <button class="accordion">getblockcount</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>getblockcount</code></p>
+                            <p>Returns the current block count in the longest blockchain.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">getmempoolinfo</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>getmempoolinfo</code></p>
+                            <p>Provides information about the transaction memory pool (mempool).</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">getdifficulty</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>getdifficulty</code></p>
+                            <p>Returns the current proof-of-work mining difficulty.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">getchaintxstats</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>getchaintxstats [nblocks] [blockhash]</code></p>
+                            <p>Returns statistics about chain transactions, such as the rate and count.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <!-- Wallet Management -->
+                        <button class="accordion">listwallets</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>listwallets</code></p>
+                            <p>Lists all open wallets loaded by the node.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">listaccounts</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>listaccounts [minconf=1]</code></p>
+                            <p>Lists accounts and their balances. (Note: Deprecated in favor of labels).</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">getwalletinfo</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>getwalletinfo</code></p>
+                            <p>Returns summary information about the wallet, including balances and transaction counts.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">getbalance</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>getbalance [dummy="*"] [minconf=1] [include_watchonly=false]</code></p>
+                            <p>Returns the total available balance of the wallet.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <!-- Transaction Management -->
+                        <button class="accordion">abandontransaction</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>abandontransaction "txid"</code></p>
+                            <p>Marks a wallet transaction as abandoned. This only affects internal wallet state, not the blockchain.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <!-- Blockchain Management -->
+                        <button class="accordion">pruneblockchain</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>pruneblockchain &lt;height&gt;</code></p>
+                            <p>Deletes old blocks from the local blockchain data to save disk space. Requires the node to be in pruning mode.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <!-- Asset Management -->
+                        <button class="accordion">issue</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>issue "asset_name" [qty=1] [to_address=""] [change_address=""] [units=0] [reissuable=true] [has_ipfs=false] [ipfs_hash=""]</code></p>
+                            <p>Issues a new asset on the Ravencoin blockchain.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">transfer</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>transfer "asset_name" qty "to_address" [message=""] [expire_time=0]</code></p>
+                            <p>Transfers a specified quantity of an asset to a given address.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">listassets</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>listassets [asset="*"] [verbose=false] [count=MAX] [start=0]</code></p>
+                            <p>Lists all assets, or a specific asset if provided.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <!-- Server Administration -->
+                        <button class="accordion">info</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>info</code></p>
+                            <p>Displays information about the RavenDB node.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">stats</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>stats</code></p>
+                            <p>Shows server statistics.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">log</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>log &lt;on|off|http-on|http-off|none|operations|information&gt;</code></p>
+                            <p>Manages logging settings.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">gc</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>gc &lt;0|1|2&gt;</code></p>
+                            <p>Triggers garbage collection.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">restartServer</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>restartServer</code></p>
+                            <p>Restarts the RavenDB server.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">resetServer</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>resetServer</code></p>
+                            <p>Resets the RavenDB server (use with caution).</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <!-- Security -->
+                        <button class="accordion">generateClientCert</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>generateClientCert &lt;name&gt; &lt;path&gt; &lt;months&gt; [password]</code></p>
+                            <p>Generates a client certificate.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">trustServerCert</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>trustServerCert &lt;name&gt; &lt;path&gt; [password]</code></p>
+                            <p>Trusts a server certificate.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <!-- Other Mocked Commands -->
+                        <button class="accordion">getnewaddress</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>getnewaddress</code></p>
+                            <p>Generates a new wallet address.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+
+                        <button class="accordion">sendtoaddress</button>
+                        <div class="panel">
+                            <p><strong>Usage:</strong> <code>sendtoaddress "address" amount</code></p>
+                            <p>Sends a specified amount of RVN to a given address.</p>
+                            <button class="execute-btn">Copy to Console</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const consoleOutput = document.getElementById('console-output');
+            const consoleInput = document.getElementById('console-input');
+
+            function addLog(message, type = 'log') {
+                const line = document.createElement('div');
+                line.className = `console-line ${type}`;
+                if (type === 'response') {
+                    try {
+                        line.textContent = JSON.stringify(message, null, 2);
+                    } catch (e) {
+                        line.textContent = message; // Fallback for non-JSON responses
+                    }
+                } else {
+                    line.textContent = message;
+                }
+                consoleOutput.appendChild(line);
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            }
+
+            function addRecentCommand(commandStr) {
+                const container = document.getElementById('recent-commands-container');
+                if (!container) return;
+
+                // Remove the 'No recent commands' message if it exists
+                const noCommandsEl = document.getElementById('no-recent-commands');
+                if (noCommandsEl) {
+                    noCommandsEl.remove();
+                }
+
+                const title = container.querySelector('.accordion-title');
+
+                // Create new accordion button
+                const newAccordion = document.createElement('button');
+                newAccordion.className = 'accordion';
+                newAccordion.textContent = commandStr;
+
+                // Create new panel
+                const newPanel = document.createElement('div');
+                newPanel.className = 'panel';
+                const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                newPanel.innerHTML = `<p><strong>Executed at:</strong> <code>${timestamp}</code></p>`;
+
+                // Add click listener for the new accordion item
+                newAccordion.addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    const panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                });
+
+                // Insert the new elements at the top of the list
+                title.insertAdjacentElement('afterend', newPanel);
+                title.insertAdjacentElement('afterend', newAccordion);
+            }
+
+            // Accordion functionality
+            const accordions = document.getElementsByClassName("accordion");
+            for (let i = 0; i < accordions.length; i++) {
+                accordions[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    const panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                });
+            }
+
+            // Combined keydown event for console input
+            consoleInput.addEventListener('keydown', async (event) => {
+                if (event.key === 'Enter') {
+                    const commandStr = consoleInput.value.trim();
+                    if (!commandStr) return;
+
+                    // 1. Log command to console UI
+                    addLog(`> ${commandStr}`, 'command');
+
+                    // 2. Add command to recent commands accordion
+                    addRecentCommand(commandStr);
+
+                    // 3. Clear the input
+                    consoleInput.value = '';
+
+                    // 4. Parse and send the RPC request
+                    const [method, ...paramsStr] = commandStr.split(' ');
+                    const params = paramsStr.map(p => { try { return JSON.parse(p); } catch { return p; } });
+
+                    const response = await fetch('/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ method: method, params: params }) });
+                    const result = await response.json();
+                    addLog(result, 'response');
+                }
+            });
+
+            // Add event listeners to all "Copy to Console" buttons
+            document.querySelectorAll('.execute-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    // Find the <code> element within the same panel
+                    const panel = event.target.closest('.panel');
+                    const commandUsage = panel.querySelector('code');
+                    
+                    if (commandUsage) {
+                        const commandText = commandUsage.textContent;
+                        consoleInput.value = commandText;
+                        consoleInput.focus(); // Focus on the input box
+                    }
+                });
+            });
+
+            // --- Add Wallet Functionality ---
+            const addWalletBtn = document.getElementById('add-wallet-btn');
+            const addWalletForm = document.getElementById('add-wallet-form');
+            const saveWalletBtn = document.getElementById('save-wallet-btn');
+            const newWalletInput = document.getElementById('new-wallet-name-input');
+            const walletListDiv = document.getElementById('wallet-list');
+
+            addWalletBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                addWalletForm.style.display = 'flex';
+                addWalletBtn.style.display = 'none';
+                newWalletInput.focus();
+            });
+
+            async function executeConsoleCommand(commandStr) {
+                // This function simulates the user typing a command and pressing enter
+                addLog(`> ${commandStr}`, 'command');
+                addRecentCommand(commandStr);
+
+                const [method, ...paramsStr] = commandStr.split(' ');
+                const params = paramsStr.map(p => { try { return JSON.parse(p); } catch { return p; } });
+
+                const response = await fetch('/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ method: method, params: params }) });
+                const result = await response.json();
+                addLog(result, 'response');
+            }
+
+            saveWalletBtn.addEventListener('click', async () => {
+                const walletName = newWalletInput.value.trim();
+                if (!walletName) {
+                    alert('Please enter a wallet name.');
+                    return;
+                }
+
+                // 1. Save the wallet to the database
+                try {
+                    const response = await fetch('/add_wallet', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: walletName })
+                    });
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        // 2. Add the new wallet to the dropdown UI
+                        const newWalletLink = document.createElement('a');
+                        newWalletLink.href = '#';
+                        newWalletLink.textContent = result.wallet.name;
+                        walletListDiv.appendChild(newWalletLink);
+
+                        // 3. Execute the 'createwallet' command in the console
+                        await executeConsoleCommand(`createwallet "${walletName}"`);
+
+                        // 4. Reset the form
+                        newWalletInput.value = '';
+                        addWalletForm.style.display = 'none';
+                        addWalletBtn.style.display = 'block';
+                    } else {
+                        alert(`Error: ${result.message}`);
+                    }
+                } catch (error) {
+                    alert(`A network error occurred: ${error}`);
+                }
+            });
+        });
+    </script>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-left">
+                <p>&copy; 2025 FG Business Services (UK) Ltd. All rights reserved.</p>
+            </div>
+            <div class="footer-center">
+                <a href="#" title="Twitter">
+                    <svg viewBox="0 0 24 24"><path d="M22.46,6C21.69,6.35 20.86,6.58 20,6.69C20.88,6.16 21.56,5.32 21.88,4.31C21.05,4.81 20.13,5.16 19.16,5.36C18.37,4.5 17.26,4 16,4C13.65,4 11.73,5.92 11.73,8.29C11.73,8.63 11.77,8.96 11.84,9.27C8.28,9.09 5.11,7.38 3,4.79C2.63,5.42 2.42,6.16 2.42,6.94C2.42,8.43 3.17,9.75 4.33,10.5C3.62,10.5 2.96,10.3 2.38,10C2.38,10 2.38,10 2.38,10.03C2.38,12.11 3.86,13.85 5.82,14.24C5.46,14.34 5.08,14.39 4.69,14.39C4.42,14.39 4.15,14.36 3.89,14.31C4.43,16.08 6.02,17.31 7.89,17.35C6.43,18.45 4.58,19.13 2.56,19.13C2.22,19.13 1.88,19.11 1.54,19.07C3.44,20.29 5.7,21 8.12,21C16,21 20.33,14.46 20.33,8.79C20.33,8.6 20.33,8.42 20.32,8.23C21.16,7.63 21.88,6.87 22.46,6Z"/></svg>
+                </a>
+                <a href="#" title="LinkedIn">
+                    <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C14.39,9.94 13.4,10.43 12.92,11.24V10.13H10.13V18.5H12.92V13.57C12.92,12.8 13.54,12.17 14.31,12.17C15.08,12.17 15.71,12.8 15.71,13.57V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,6 7.78,5.2 6.88,5.2A1.69,1.69 0 0,0 5.2,6.88C5.2,7.78 6,8.56 6.88,8.56M8.27,18.5V10.13H5.5V18.5H8.27Z"/></svg>
+                </a>
+                <a href="#" title="GitHub">
+                    <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.83,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z"/></svg>
+                </a>
+            </div>
+            <div class="footer-right">
+                <a href="#">About</a>
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
